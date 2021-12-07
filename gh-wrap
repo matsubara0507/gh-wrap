@@ -1,7 +1,38 @@
 #!/usr/bin/env bash
 set -e
 
-YYYY=$1
+while [ $# -gt 0 ]; do
+  case "$1" in
+  -h|--help)
+    cat << EOS
+Collect your yearly GitHub all stats
+ - Commits : yearly commits count in all private/public repositories
+ - PullRequests : yearly opened pull requests count in all private/public repositories
+ - Issues : yearly opened issues count in all private/public repositories
+ - NewRepos : yearly created repositories count without fork
+
+USAGE
+  gh wrap [<year>] [flags]
+
+FLAGS
+
+INHERITED FLAGS
+  -h, --help                     Show help for command
+
+ACKNOWLEDGMENTS
+  This gh extension is inspired by https://lowcode.land/ghwrap/
+EOS
+    exit 0
+    ;;
+  * )
+    if [ -z $YYYY ]; then
+      YYYY=$1
+    fi
+    ;;
+  esac
+  shift
+done
+
 if [ -z $YYYY ]; then
   YYYY=$(date '+%Y')
 fi
