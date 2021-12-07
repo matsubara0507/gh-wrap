@@ -1,35 +1,52 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Hello gh-wrap!"
+YYYY=$1
+if [ -z $YYYY ]; then
+  YYYY=$(date '+%Y')
+fi
 
-# Snippets to help get started:
+LOGIN=$(gh api user --jq .login)
 
-# Determine if an executable is in the PATH
-# if ! type -p ruby >/dev/null; then
-#   echo "Ruby not found on the system" >&2
-#   exit 1
-# fi
+QUERY="author:${LOGIN} author-date:${YYYY}-01-01..${YYYY}-12-31"
+COMMITS_CNT=$(gh api -X GET search/commits -f q="${QUERY}" -f per_page=1 --jq .total_count)
 
-# Pass arguments through to another command
-# gh issue list "$@" -R cli/cli
+QUERY=`cat << EOS
+  query {
+    search(query: "type:pr author:${LOGIN} created:${YYYY}-01-01..${YYYY}-12-31", type: ISSUE) {
+      issueCount
+    }
+  }
+EOS
+`
+PULL_REQUESTS_CNT=$(gh api graphql -f query="${QUERY}" --jq .data.search.issueCount)
 
-# Using the gh api command to retrieve and format information
-# QUERY='
-#   query($endCursor: String) {
-#     viewer {
-#       repositories(first: 100, after: $endCursor) {
-#         nodes {
-#           nameWithOwner
-#           stargazerCount
-#         }
-#       }
-#     }
-#   }
-# '
-# TEMPLATE='
-#   {{- range $repo := .data.viewer.repositories.nodes -}}
-#     {{- printf "name: %s - stargazers: %v\n" $repo.nameWithOwner $repo.stargazerCount -}}
-#   {{- end -}}
-# '
-# exec gh api graphql -f query="${QUERY}" --paginate --template="${TEMPLATE}"
+QUERY=`cat << EOS
+  query {
+    search(query: "type:issue author:${LOGIN} created:${YYYY}-01-01..${YYYY}-12-31", type: ISSUE) {
+      issueCount
+    }
+  }
+EOS
+`
+ISSUES_CNT=$(gh api graphql -f query="${QUERY}" --jq .data.search.issueCount)
+
+QUERY=`cat << EOS
+  query {
+    search(query: "user:${LOGIN} fork:false created:${YYYY}-01-01..${YYYY}-12-31", type: REPOSITORY) {
+      repositoryCount
+    }
+  }
+EOS
+`
+NEW_REPOS_CNT=$(gh api graphql -f query="${QUERY}" --jq .data.search.repositoryCount)
+
+cat - << EOS
+{
+  "GitHub CLI Wrap 🚀": "${LOGIN}'s ${YYYY} GitHub ALL Stats",
+  "Commits": ${COMMITS_CNT},
+  "PullRequests": ${PULL_REQUESTS_CNT},
+  "Issues": ${ISSUES_CNT},
+  "NewRepos": ${NEW_REPOS_CNT}
+}
+EOS
