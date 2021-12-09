@@ -5,8 +5,10 @@ on:
     branches:
     - main
 jobs:
-  build:
+  run:
     runs-on: ubuntu-18.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - uses: actions/checkout@v2
 
