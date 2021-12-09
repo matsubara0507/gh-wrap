@@ -1,0 +1,17 @@
+name: Run Extension Command
+on:
+  pull_request: null
+  push:
+    branches:
+    - main
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install extension
+      run: gh extension install .
+
+    - name: Run extension
+      run: gh wrap
