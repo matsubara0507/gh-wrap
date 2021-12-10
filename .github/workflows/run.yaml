@@ -19,8 +19,8 @@ jobs:
       id: gh
       run: |
         result=$(gh wrap)
-        result=${/result/$'\n'/\\n}
-        result=${/result/$'"'/\"}
+        result=${result//$'\n'/\\n}
+        result=${result//$'"'/\"}
         echo "::set-output name=wrap::${result}"
 
     - name: Comment result
