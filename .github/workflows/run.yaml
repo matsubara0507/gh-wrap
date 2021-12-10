@@ -16,4 +16,17 @@ jobs:
       run: gh extension install .
 
     - name: Run extension
-      run: gh wrap
+      id: gh
+      run: echo "::set-output name=wrap::$(gh wrap)"
+
+    - name: Comment result
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: "```\n${{ steps.gh.outputs.wrap }}```\n"
+          })
