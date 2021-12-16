@@ -1,0 +1,33 @@
+name: Run Extension Command
+on:
+  pull_request: null
+jobs:
+  run:
+    runs-on: ubuntu-18.04
+    env:
+      GH_TOKEN: ${{ secrets.GH_PAT }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install extension
+      run: gh extension install .
+
+    - name: Run extension
+      id: gh
+      run: |
+        result=$(gh wrap)
+        result=${result//$'\n'/\\n}
+        result=${result//$'"'/\\\"}
+        echo "::set-output name=wrap::${result}"
+
+    - name: Comment result
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: "Run `gh wrap` at workflow:\n```\n${{ steps.gh.outputs.wrap }}\n```\n"
+          })
